@@ -9,6 +9,7 @@ function BottomTab({ user, unreadChatCount = 0 }) {
       navigate("/login");
       return;
     }
+
     navigate("/mypage");
   }
 
@@ -17,6 +18,7 @@ function BottomTab({ user, unreadChatCount = 0 }) {
       navigate("/login");
       return;
     }
+
     navigate("/sell");
   }
 
@@ -53,19 +55,21 @@ function BottomTab({ user, unreadChatCount = 0 }) {
           <span
             style={{
               position: "absolute",
-              top: 2,
-              right: 10,
-              minWidth: 18,
-              height: 18,
-              borderRadius: 999,
-              background: "#ff3b30",
-              color: "#fff",
-              fontSize: 11,
-              fontWeight: 700,
+              top: "2px",
+              right: "10px",
+              minWidth: "18px",
+              height: "18px",
+              padding: "0 5px",
+              borderRadius: "999px",
+              backgroundColor: "#ff3b30",
+              color: "white",
+              fontSize: "11px",
+              fontWeight: "800",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "0 5px",
+              lineHeight: 1,
+              boxShadow: "0 2px 6px rgba(255, 59, 48, 0.35)",
             }}
           >
             {unreadChatCount > 999 ? "999+" : unreadChatCount}

@@ -16,6 +16,8 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  collectionGroup,
+  where,
 } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
@@ -195,36 +197,30 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
-  useEffect(() => {
-    if (!user) {
-      setUnreadChatCount(0);
-      return;
+useEffect(() => {
+  if (!user) {
+    setUnreadChatCount(0);
+    return;
+  }
+
+  const unreadMessagesQuery = query(
+    collectionGroup(db, "messages"),
+    where("receiverId", "==", user.uid),
+    where("read", "==", false)
+  );
+
+  const unsubscribe = onSnapshot(
+    unreadMessagesQuery,
+    (snapshot) => {
+      setUnreadChatCount(snapshot.size);
+    },
+    (error) => {
+      console.error("채팅 배지 불러오기 오류:", error);
     }
+  );
 
-    const chatsQuery = query(collection(db, "chats"));
-
-    const unsubscribe = onSnapshot(
-      chatsQuery,
-      (snapshot) => {
-        let total = 0;
-
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-
-          if (data.participants?.includes(user.uid)) {
-            total += Number(data.unreadCount?.[user.uid] || 0);
-          }
-        });
-
-        setUnreadChatCount(total);
-      },
-      (error) => {
-        console.error("채팅 배지 불러오기 오류:", error);
-      }
-    );
-
-    return () => unsubscribe();
-  }, [user]);
+  return () => unsubscribe();
+}, [user]);
 
   function requireLogin() {
     if (!user) {
@@ -623,6 +619,17 @@ function App() {
             />
           }
         />
+
+        <Route
+  path="/chat/:productId"
+  element={
+    <Chat
+      user={user}
+      products={products}
+      addNotification={addNotification}
+    />
+  }
+/>
       </Routes>
 
       {!hideBottomTab && (

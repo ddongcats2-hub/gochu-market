@@ -55,7 +55,9 @@ export default function Chat() {
   const [promisePlace, setPromisePlace] = useState("");
 
   const productId =
-    params.productId || location.state?.productId || location.state?.product?.id;
+    params.productId ||
+    location.state?.productId ||
+    location.state?.product?.id;
 
   const otherUserId =
     params.otherUserId ||
@@ -70,9 +72,7 @@ export default function Chat() {
   }, [currentUser, otherUserId, productId]);
 
   const isSeller =
-    currentUser?.uid &&
-    product &&
-    product.sellerUid === currentUser.uid;
+    currentUser?.uid && product && product.sellerUid === currentUser.uid;
 
   const buyerUid = isSeller ? otherUserId : currentUser?.uid;
 
@@ -146,10 +146,6 @@ export default function Chat() {
             participantMap: {
               [currentUser.uid]: true,
               [otherUserId]: true,
-            },
-            unreadCount: {
-              [currentUser.uid]: 0,
-              [otherUserId]: 0,
             },
             lastMessage: "",
             lastMessageSenderId: "",
@@ -400,11 +396,7 @@ export default function Chat() {
   function renderMessage(msg) {
     if (msg.type === "image") {
       return (
-        <img
-          src={msg.imageUrl}
-          alt="채팅 이미지"
-          style={styles.chatImage}
-        />
+        <img src={msg.imageUrl} alt="채팅 이미지" style={styles.chatImage} />
       );
     }
 
@@ -460,7 +452,10 @@ export default function Chat() {
       )}
 
       <div style={styles.actionBar}>
-        <button style={styles.actionButton} onClick={() => fileRef.current?.click()}>
+        <button
+          style={styles.actionButton}
+          onClick={() => fileRef.current?.click()}
+        >
           📷 사진
         </button>
 
@@ -541,7 +536,9 @@ export default function Chat() {
                 </div>
 
                 {!isMine && (
-                  <div style={styles.metaRight}>{formatTime(msg.createdAt)}</div>
+                  <div style={styles.metaRight}>
+                    {formatTime(msg.createdAt)}
+                  </div>
                 )}
               </div>
             );
