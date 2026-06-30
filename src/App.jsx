@@ -64,12 +64,21 @@ function makeDefaultProfile(user) {
 function App() {
   const location = useLocation();
 
+<<<<<<< HEAD
 const hideBottomTab =
   location.pathname.startsWith("/chat/");
+=======
+  const hideBottomTab = location.pathname.startsWith("/chat/");
+
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(guestProfile);
   const [products, setProducts] = useState([]);
   const [notifications, setNotifications] = useState([]);
+<<<<<<< HEAD
+=======
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
   const [search, setSearch] = useState("");
 
   useEffect(() => {
@@ -80,6 +89,10 @@ const hideBottomTab =
         if (!firebaseUser) {
           setProfile(guestProfile);
           setNotifications([]);
+<<<<<<< HEAD
+=======
+          setUnreadChatCount(0);
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           return;
         }
 
@@ -130,12 +143,21 @@ const hideBottomTab =
             description: data.description || "",
             image: data.image || "🆕",
             seller: data.seller || "고추유저",
+<<<<<<< HEAD
 sellerUid: data.sellerUid || "",
 buyerUid: data.buyerUid || "",
 reservedBy: data.reservedBy || "",
 reserved: Boolean(data.reserved),
 dealStatus: data.dealStatus || "",
 sold: Boolean(data.sold),
+=======
+            sellerUid: data.sellerUid || "",
+            buyerUid: data.buyerUid || "",
+            reservedBy: data.reservedBy || "",
+            reserved: Boolean(data.reserved),
+            dealStatus: data.dealStatus || "",
+            sold: Boolean(data.sold),
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
             likedBy,
             likes: likedBy.length,
             liked: user ? likedBy.includes(user.uid) : false,
@@ -194,7 +216,41 @@ sold: Boolean(data.sold),
     return () => unsubscribe();
   }, [user]);
 
+<<<<<<< HEAD
   function requireLogin() {
+=======
+  useEffect(() => {
+    if (!user) {
+      setUnreadChatCount(0);
+      return;
+    }
+
+    const chatsQuery = query(collection(db, "chats"));
+
+    const unsubscribe = onSnapshot(
+      chatsQuery,
+      (snapshot) => {
+        let total = 0;
+
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+
+          if (data.participants?.includes(user.uid)) {
+            total += Number(data.unreadCount?.[user.uid] || 0);
+          }
+        });
+
+        setUnreadChatCount(total);
+      },
+      (error) => {
+        console.error("채팅 배지 불러오기 오류:", error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [user]);
+    function requireLogin() {
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     if (!user) {
       alert("로그인이 필요합니다.");
       return false;
@@ -226,6 +282,10 @@ sold: Boolean(data.sold),
       setUser(null);
       setProfile(guestProfile);
       setNotifications([]);
+<<<<<<< HEAD
+=======
+      setUnreadChatCount(0);
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     } catch (error) {
       console.error("로그아웃 오류:", error);
       alert("로그아웃 중 오류가 발생했습니다.");
@@ -236,9 +296,15 @@ sold: Boolean(data.sold),
     if (!requireLogin()) return false;
 
     const title = data.title?.trim();
+<<<<<<< HEAD
 const price = Number(data.price);
 
 if (!title || Number.isNaN(price) || price < 0) {
+=======
+    const price = Number(data.price);
+
+    if (!title || Number.isNaN(price) || price < 0) {
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
       alert("상품명과 가격을 입력해주세요.");
       return false;
     }
@@ -288,9 +354,15 @@ if (!title || Number.isNaN(price) || price < 0) {
     }
 
     const title = data.title?.trim();
+<<<<<<< HEAD
 const price = Number(data.price);
 
 if (!title || Number.isNaN(price) || price < 0) {
+=======
+    const price = Number(data.price);
+
+    if (!title || Number.isNaN(price) || price < 0) {
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
       alert("상품명과 가격을 입력해주세요.");
       return false;
     }
@@ -368,10 +440,18 @@ if (!title || Number.isNaN(price) || price < 0) {
       if (target.liked) {
         await updateDoc(productRef, {
           likedBy: arrayRemove(user.uid),
+<<<<<<< HEAD
+=======
+          updatedAt: serverTimestamp(),
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
         });
       } else {
         await updateDoc(productRef, {
           likedBy: arrayUnion(user.uid),
+<<<<<<< HEAD
+=======
+          updatedAt: serverTimestamp(),
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
         });
 
         await addNotification(
@@ -410,6 +490,7 @@ if (!title || Number.isNaN(price) || price < 0) {
       await updateDoc(doc(db, "products", id), {
         sold: true,
         soldAt: serverTimestamp(),
+<<<<<<< HEAD
       });
 
 await updateDoc(doc(db, "users", user.uid), {
@@ -429,22 +510,57 @@ await addNotification(
 
 alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상승합니다.");
 
+=======
+        updatedAt: serverTimestamp(),
+      });
+
+      await updateDoc(doc(db, "users", user.uid), {
+        deals: increment(1),
+        updatedAt: serverTimestamp(),
+      });
+
+      setProfile((prev) => ({
+        ...prev,
+        deals: Number(prev.deals || 0) + 1,
+      }));
+
+      await addNotification(
+        "✅",
+        "거래가 완료됐어요",
+        `${target.title} 거래가 완료되었습니다. 후기를 작성하면 스코빌이 상승합니다.`
+      );
+
+      alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상승합니다.");
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     } catch (error) {
       console.error("거래 완료 오류:", error);
       alert("거래 완료 처리 중 오류가 발생했습니다.");
     }
   }
+<<<<<<< HEAD
 
   async function updateNotifications(nextNotifications) {
+=======
+    async function updateNotifications(nextNotifications) {
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     if (!user) return;
 
     try {
       const updateTasks = nextNotifications
         .filter((notice) => notice.id)
         .map((notice) =>
+<<<<<<< HEAD
           updateDoc(doc(db, "users", user.uid, "notifications", notice.id), {
             read: Boolean(notice.read),
           })
+=======
+          updateDoc(
+            doc(db, "users", user.uid, "notifications", notice.id),
+            {
+              read: Boolean(notice.read),
+            }
+          )
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
         );
 
       await Promise.all(updateTasks);
@@ -490,7 +606,15 @@ alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상
         <Route
           path="/sell"
           element={
+<<<<<<< HEAD
             <Sell user={user} profile={profile} addProduct={addProduct} />
+=======
+            <Sell
+              user={user}
+              profile={profile}
+              addProduct={addProduct}
+            />
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           }
         />
 
@@ -506,9 +630,21 @@ alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상
         />
 
         <Route
+<<<<<<< HEAD
   path="/chat/:productId/:otherUserId"
   element={<Chat />}
 />
+=======
+          path="/chat/:productId/:otherUserId"
+          element={
+            <Chat
+              user={user}
+              products={products}
+              addNotification={addNotification}
+            />
+          }
+        />
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
 
         <Route
           path="/chat-list"
@@ -537,9 +673,16 @@ alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상
           path="/notifications"
           element={
             <Notifications
+<<<<<<< HEAD
   user={user}
   notifications={notifications}
 />
+=======
+              user={user}
+              notifications={notifications}
+              setNotifications={updateNotifications}
+            />
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           }
         />
 
@@ -586,8 +729,18 @@ alert("거래가 완료되었습니다.\n후기를 작성하면 스코빌이 상
         />
       </Routes>
 
+<<<<<<< HEAD
      {!hideBottomTab && <BottomTab user={user} />}
          </>
+=======
+      {!hideBottomTab && (
+        <BottomTab
+          user={user}
+          unreadChatCount={unreadChatCount}
+        />
+      )}
+    </>
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
   );
 }
 

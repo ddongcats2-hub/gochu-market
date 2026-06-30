@@ -6,6 +6,10 @@ import {
   collection,
   doc,
   getDoc,
+<<<<<<< HEAD
+=======
+  increment,
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
   onSnapshot,
   orderBy,
   query,
@@ -82,6 +86,10 @@ export default function Chat() {
         navigate("/login");
         return;
       }
+<<<<<<< HEAD
+=======
+
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
       setCurrentUser(user);
     });
 
@@ -101,15 +109,33 @@ export default function Chat() {
       try {
         if (!product) {
           const productSnap = await getDoc(doc(db, "products", productId));
+<<<<<<< HEAD
           if (productSnap.exists()) {
             setProduct({ id: productSnap.id, ...productSnap.data() });
+=======
+
+          if (productSnap.exists()) {
+            setProduct({
+              id: productSnap.id,
+              ...productSnap.data(),
+            });
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           }
         }
 
         if (!otherUser) {
           const userSnap = await getDoc(doc(db, "users", otherUserId));
+<<<<<<< HEAD
           if (userSnap.exists()) {
             setOtherUser({ id: userSnap.id, ...userSnap.data() });
+=======
+
+          if (userSnap.exists()) {
+            setOtherUser({
+              id: userSnap.id,
+              ...userSnap.data(),
+            });
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           }
         }
       } catch (error) {
@@ -126,10 +152,17 @@ export default function Chat() {
     async function makeRoom() {
       try {
         const chatRef = doc(db, "chats", chatId);
+<<<<<<< HEAD
         const snap = await getDoc(chatRef);
 
         if (!snap.exists()) {
           await setDoc(chatRef, {
+=======
+
+        await setDoc(
+          chatRef,
+          {
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
             id: chatId,
             productId,
             participants: [currentUser.uid, otherUserId],
@@ -137,12 +170,29 @@ export default function Chat() {
               [currentUser.uid]: true,
               [otherUserId]: true,
             },
+<<<<<<< HEAD
+=======
+            unreadCount: {
+              [currentUser.uid]: 0,
+              [otherUserId]: 0,
+            },
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
             lastMessage: "",
             lastMessageSenderId: "",
             createdAt: serverTimestamp(),
             updatedAt: serverTimestamp(),
+<<<<<<< HEAD
           });
         }
+=======
+          },
+          { merge: true }
+        );
+
+        await updateDoc(chatRef, {
+          [`unreadCount.${currentUser.uid}`]: 0,
+        });
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
 
         setLoading(false);
       } catch (error) {
@@ -170,6 +220,7 @@ export default function Chat() {
 
       setMessages(list);
 
+<<<<<<< HEAD
       snapshot.docs.forEach(async (docSnap) => {
         const data = docSnap.data();
 
@@ -179,6 +230,25 @@ export default function Chat() {
           });
         }
       });
+=======
+      try {
+        await updateDoc(doc(db, "chats", chatId), {
+          [`unreadCount.${currentUser.uid}`]: 0,
+        });
+
+        snapshot.docs.forEach(async (docSnap) => {
+          const data = docSnap.data();
+
+          if (data.receiverId === currentUser.uid && !data.read) {
+            await updateDoc(doc(db, "chats", chatId, "messages", docSnap.id), {
+              read: true,
+            });
+          }
+        });
+      } catch (error) {
+        console.error("읽음 처리 실패:", error);
+      }
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     });
 
     return () => unsub();
@@ -215,6 +285,10 @@ export default function Chat() {
           },
           lastMessage,
           lastMessageSenderId: currentUser.uid,
+<<<<<<< HEAD
+=======
+          [`unreadCount.${otherUserId}`]: increment(1),
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           updatedAt: serverTimestamp(),
         },
         { merge: true }
@@ -408,7 +482,15 @@ export default function Chat() {
       {product && (
         <div style={styles.productBox}>
           {product.image?.startsWith?.("data:image") ? (
+<<<<<<< HEAD
             <img src={product.image} alt={product.title} style={styles.productImage} />
+=======
+            <img
+              src={product.image}
+              alt={product.title}
+              style={styles.productImage}
+            />
+>>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
           ) : (
             <div style={styles.noImage}>{product.image || "🆕"}</div>
           )}
