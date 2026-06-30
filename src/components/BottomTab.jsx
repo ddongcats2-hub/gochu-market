@@ -1,13 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 
-<<<<<<< HEAD
-function BottomTab({ user }) {
-=======
-function BottomTab({
-  user,
-  unreadChatCount = 0,
-}) {
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
+function BottomTab({ user, unreadChatCount = 0 }) {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -16,7 +9,6 @@ function BottomTab({
       navigate("/login");
       return;
     }
-
     navigate("/mypage");
   }
 
@@ -25,7 +17,6 @@ function BottomTab({
       navigate("/login");
       return;
     }
-
     navigate("/sell");
   }
 
@@ -47,24 +38,13 @@ function BottomTab({
         관심
       </button>
 
-<<<<<<< HEAD
       <button className="sellTab" onClick={goSell}>
-=======
-      <button
-        className="sellTab"
-        onClick={goSell}
-      >
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
         <span>＋</span>
       </button>
 
       <button
         className={location.pathname === "/chat-list" ? "activeTab" : ""}
         onClick={() => navigate("/chat-list")}
-<<<<<<< HEAD
-      >
-        <span>💬</span>
-=======
         style={{ position: "relative" }}
       >
         <span>💬</span>
@@ -88,13 +68,10 @@ function BottomTab({
               padding: "0 5px",
             }}
           >
-            {unreadChatCount > 999
-              ? "999+"
-              : unreadChatCount}
+            {unreadChatCount > 999 ? "999+" : unreadChatCount}
           </span>
         )}
 
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
         채팅
       </button>
 

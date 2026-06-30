@@ -1,45 +1,22 @@
 {
-<<<<<<< HEAD
-  "name": "gochumarket",
-=======
-  "name": "client",
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
+  "name": "gochu-market",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-<<<<<<< HEAD
-    "lint": "oxlint",
-=======
-    "lint": "eslint .",
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
     "preview": "vite preview"
   },
   "dependencies": {
-    "firebase": "^12.15.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.1"
+    "firebase": "^12.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
-<<<<<<< HEAD
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.3",
-    "oxlint": "^1.71.0",
-    "vite": "^8.1.1"
-=======
-    "@eslint/js": "^10.0.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "eslint": "^10.5.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^17.6.0",
-    "vite": "^8.1.0"
->>>>>>> f107ef44276ccee10e56d2ab37750cf493f449dd
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.30.1",
+    "vite": "^7.0.4"
   }
 }
