@@ -209,7 +209,11 @@ export default function ChatList() {
                     color: room.unread > 0 ? "#222" : "#444",
                   }}
                 >
-                  {room.lastMessage || "메시지가 없습니다."}
+                  {room.lastMessage
+  ? room.lastMessageSenderId === currentUser.uid
+    ? `나: ${room.lastMessage}`
+    : room.lastMessage
+  : "메시지가 없습니다."}
                 </div>
               </div>
             </button>
@@ -347,3 +351,4 @@ const styles = {
     whiteSpace: "nowrap",
   },
 };
+

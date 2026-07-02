@@ -241,9 +241,9 @@ await setDoc(
             [currentUser.uid]: true,
             [otherUserId]: true,
           },
-          lastMessage,
-          lastMessageSenderId: currentUser.uid,
-          updatedAt: serverTimestamp(),
+lastMessage: lastMessage || messageData.text || "새 메시지",
+lastMessageSenderId: currentUser.uid,
+updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
