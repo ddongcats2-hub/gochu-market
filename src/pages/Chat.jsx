@@ -155,8 +155,6 @@ await setDoc(
 
     lastMessage: "",
     lastMessageSenderId: "",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
   },
   { merge: true }
 );
