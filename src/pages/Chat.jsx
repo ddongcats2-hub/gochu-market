@@ -137,23 +137,32 @@ export default function Chat() {
       try {
         const chatRef = doc(db, "chats", chatId);
 
-        await setDoc(
-          chatRef,
-          {
-            id: chatId,
-            productId,
-            participants: [currentUser.uid, otherUserId],
-            participantMap: {
-              [currentUser.uid]: true,
-              [otherUserId]: true,
-            },
-            lastMessage: "",
-            lastMessageSenderId: "",
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
+await setDoc(
+  chatRef,
+  {
+    id: chatId,
+    productId,
+    participants: [currentUser.uid, otherUserId],
+    participantMap: {
+      [currentUser.uid]: true,
+      [otherUserId]: true,
+    },
+
+    unreadCount: {
+      [currentUser.uid]: 0,
+      [otherUserId]: 0,
+    },
+
+    lastMessage: "",
+    lastMessageSenderId: "",
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  },
+  { merge: true }
+);
+        await updateDoc(chatRef, {
+          [`unreadCount.${currentUser.uid}`]: 0,
+        });
 
         setLoading(false);
       } catch (error) {
@@ -182,13 +191,9 @@ export default function Chat() {
       setMessages(list);
 
       try {
-        await setDoc(
-  doc(db, "chats", chatId),
-  {
-    [`unreadCount.${currentUser.uid}`]: 0,
-  },
-  { merge: true }
-);
+        await updateDoc(doc(db, "chats", chatId), {
+          [`unreadCount.${currentUser.uid}`]: 0,
+        });
 
         snapshot.docs.forEach(async (docSnap) => {
           const data = docSnap.data();
@@ -243,22 +248,9 @@ export default function Chat() {
         { merge: true }
       );
 
-try {
-  console.log("배지 올리기 시도:", otherUserId);
-
-await setDoc(
-  doc(db, "chats", chatId),
-  {
-    [`unreadCount.${otherUserId}`]: increment(1),
-  },
-  { merge: true }
-);
-
-  console.log("배지 올리기 성공");
-} catch (error) {
-  console.error("배지 올리기 실패:", error);
-  alert(`배지 올리기 실패: ${error.code || error.message}`);
-}
+      await updateDoc(doc(db, "chats", chatId), {
+        [`unreadCount.${otherUserId}`]: increment(1),
+      });
 
       return true;
     } catch (error) {
@@ -819,4 +811,4 @@ const styles = {
     fontWeight: "700",
     cursor: "pointer",
   },
-};
+}; 
