@@ -191,9 +191,6 @@ await setDoc(
       setMessages(list);
 
       try {
-        await updateDoc(doc(db, "chats", chatId), {
-          [`unreadCount.${currentUser.uid}`]: 0,
-        });
 
         snapshot.docs.forEach(async (docSnap) => {
           const data = docSnap.data();
