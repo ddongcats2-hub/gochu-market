@@ -41,8 +41,16 @@ function TopBar({ user, profile, notificationCount = 0 }) {
           )}
         </button>
 
-        <button className="circleButton" onClick={goMyPage}>
-          {profile?.photo ? <img src={profile.photo} alt="profile" /> : "👤"}
+        <button className="circleButton profileButton" onClick={goMyPage}>
+          {profile?.photo ? (
+            <img
+              src={profile.photo}
+              alt="profile"
+              className="topProfileImage"
+            />
+          ) : (
+            "👤"
+          )}
         </button>
       </div>
     </div>
