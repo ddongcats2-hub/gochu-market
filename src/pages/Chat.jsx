@@ -137,30 +137,25 @@ export default function Chat() {
       try {
         const chatRef = doc(db, "chats", chatId);
 
-await setDoc(
-  chatRef,
-  {
-    id: chatId,
-    productId,
-    participants: [currentUser.uid, otherUserId],
-    participantMap: {
-      [currentUser.uid]: true,
-      [otherUserId]: true,
-    },
-
-    unreadCount: {
-      [currentUser.uid]: 0,
-      [otherUserId]: 0,
-    },
-
-    lastMessage: "",
-    lastMessageSenderId: "",
-  },
-  { merge: true }
-);
-        await updateDoc(chatRef, {
-          [`unreadCount.${currentUser.uid}`]: 0,
-        });
+        await setDoc(
+          chatRef,
+          {
+            id: chatId,
+            productId,
+            participants: [currentUser.uid, otherUserId],
+            participantMap: {
+              [currentUser.uid]: true,
+              [otherUserId]: true,
+            },
+            unreadCount: {
+              [currentUser.uid]: 0,
+              [otherUserId]: 0,
+            },
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true }
+        );
 
         setLoading(false);
       } catch (error) {
@@ -239,9 +234,9 @@ await setDoc(
             [currentUser.uid]: true,
             [otherUserId]: true,
           },
-lastMessage: lastMessage || messageData.text || "새 메시지",
-lastMessageSenderId: currentUser.uid,
-updatedAt: serverTimestamp(),
+          lastMessage: lastMessage || messageData.text || "새 메시지",
+          lastMessageSenderId: currentUser.uid,
+          updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
@@ -299,49 +294,15 @@ updatedAt: serverTimestamp(),
     reader.readAsDataURL(file);
   }
 
-  async function handleReserveOnly() {
-    if (!buyerUid) {
-      alert("구매자 정보를 찾을 수 없습니다.");
-      return;
-    }
-
-    if (!window.confirm("이 상품을 예약중으로 변경할까요?")) return;
-
-    try {
-      await updateDoc(doc(db, "products", productId), {
-        reserved: true,
-        reservedBy: buyerUid,
-        buyerUid,
-        dealStatus: "reserved",
-        reservedAt: serverTimestamp(),
-      });
-
-      setProduct((prev) => ({
-        ...prev,
-        reserved: true,
-        reservedBy: buyerUid,
-        buyerUid,
-        dealStatus: "reserved",
-      }));
-
-      await sendMessage(
-        {
-          type: "system",
-          text: "✅ 상품이 예약중으로 변경되었습니다.",
-        },
-        "✅ 예약중"
-      );
-    } catch (error) {
-      console.error("예약 실패:", error);
-      alert("예약 처리 중 오류가 발생했습니다.");
-    }
+  function handleReserveOnly() {
+    setShowPromiseBox(true);
   }
 
   async function handlePromiseSubmit(e) {
     e.preventDefault();
 
     if (!promiseDate) {
-      alert("약속 시간을 선택해주세요.");
+      alert("거래 날짜와 시간을 선택해주세요.");
       return;
     }
 
@@ -355,7 +316,7 @@ updatedAt: serverTimestamp(),
       return;
     }
 
-    const promiseText = `📅 거래 약속\n시간: ${promiseDate}\n장소: ${promisePlace.trim()}`;
+    const promiseText = `📅 거래 예약 완료\n시간: ${promiseDate}\n장소: ${promisePlace.trim()}`;
 
     const ok = await sendMessage(
       {
@@ -364,7 +325,7 @@ updatedAt: serverTimestamp(),
         promiseDate,
         promisePlace: promisePlace.trim(),
       },
-      "📅 거래 약속"
+      "📅 거래 예약 완료"
     );
 
     if (!ok) return;
@@ -378,6 +339,7 @@ updatedAt: serverTimestamp(),
         reservedAt: serverTimestamp(),
         promiseDate,
         promisePlace: promisePlace.trim(),
+        updatedAt: serverTimestamp(),
       });
 
       setProduct((prev) => ({
@@ -394,8 +356,47 @@ updatedAt: serverTimestamp(),
       setPromisePlace("");
       setShowPromiseBox(false);
     } catch (error) {
-      console.error("약속 저장 실패:", error);
-      alert("약속 저장 중 오류가 발생했습니다.");
+      console.error("예약 저장 실패:", error);
+      alert("예약 저장 중 오류가 발생했습니다.");
+    }
+  }
+
+  async function handleCancelReservation() {
+    if (!window.confirm("예약을 취소할까요?")) return;
+
+    try {
+      await updateDoc(doc(db, "products", productId), {
+        reserved: false,
+        reservedBy: "",
+        buyerUid: "",
+        dealStatus: "",
+        promiseDate: "",
+        promisePlace: "",
+        updatedAt: serverTimestamp(),
+      });
+
+      setProduct((prev) => ({
+        ...prev,
+        reserved: false,
+        reservedBy: "",
+        buyerUid: "",
+        dealStatus: "",
+        promiseDate: "",
+        promisePlace: "",
+      }));
+
+      setShowPromiseBox(false);
+
+      await sendMessage(
+        {
+          type: "system",
+          text: "❌ 예약이 취소되었습니다.",
+        },
+        "❌ 예약 취소"
+      );
+    } catch (error) {
+      console.error("예약 취소 실패:", error);
+      alert("예약 취소 중 오류가 발생했습니다.");
     }
   }
 
@@ -448,12 +449,28 @@ updatedAt: serverTimestamp(),
             <div style={styles.price}>{formatPrice(product.price)}</div>
 
             {(product.reserved || product.dealStatus === "reserved") &&
-              !product.sold && <div style={styles.badge}>예약중</div>}
+              !product.sold && (
+                <div style={styles.reservedInfo}>
+                  <div style={styles.badge}>예약중</div>
+                  {product.promiseDate && (
+                    <div style={styles.promiseText}>🕒 {product.promiseDate}</div>
+                  )}
+                  {product.promisePlace && (
+                    <div style={styles.promiseText}>📍 {product.promisePlace}</div>
+                  )}
+                </div>
+              )}
           </div>
 
-          <button style={styles.reserveButton} onClick={handleReserveOnly}>
-            예약
-          </button>
+          {product.reserved || product.dealStatus === "reserved" ? (
+            <button style={styles.cancelButton} onClick={handleCancelReservation}>
+              예약 취소
+            </button>
+          ) : (
+            <button style={styles.reserveButton} onClick={handleReserveOnly}>
+              예약
+            </button>
+          )}
         </div>
       )}
 
@@ -463,13 +480,6 @@ updatedAt: serverTimestamp(),
           onClick={() => fileRef.current?.click()}
         >
           📷 사진
-        </button>
-
-        <button
-          style={styles.actionButton}
-          onClick={() => setShowPromiseBox((prev) => !prev)}
-        >
-          📅 약속 잡기
         </button>
 
         <input
@@ -491,12 +501,12 @@ updatedAt: serverTimestamp(),
           />
           <input
             style={styles.promiseInput}
-            placeholder="거래 장소"
+            placeholder="거래 장소를 입력하세요"
             value={promisePlace}
             onChange={(e) => setPromisePlace(e.target.value)}
           />
           <button style={styles.promiseButton} type="submit">
-            확정
+            예약 확정
           </button>
         </form>
       )}
@@ -644,20 +654,37 @@ const styles = {
     fontWeight: "700",
     marginTop: "4px",
   },
+  reservedInfo: {
+    marginTop: "5px",
+  },
   badge: {
     display: "inline-block",
-    marginTop: "5px",
     padding: "3px 8px",
     borderRadius: "999px",
     backgroundColor: "#fff1f1",
     color: "#ff3b30",
     fontSize: "12px",
     fontWeight: "800",
+    marginBottom: "4px",
+  },
+  promiseText: {
+    fontSize: "12px",
+    color: "#666",
+    marginTop: "2px",
   },
   reserveButton: {
     border: "none",
     borderRadius: "14px",
     backgroundColor: "#ff3b30",
+    color: "#fff",
+    padding: "10px 12px",
+    fontWeight: "800",
+    cursor: "pointer",
+  },
+  cancelButton: {
+    border: "none",
+    borderRadius: "14px",
+    backgroundColor: "#8e8e93",
     color: "#fff",
     padding: "10px 12px",
     fontWeight: "800",
@@ -809,4 +836,4 @@ const styles = {
     fontWeight: "700",
     cursor: "pointer",
   },
-}; 
+};
