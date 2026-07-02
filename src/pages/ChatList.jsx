@@ -40,80 +40,68 @@ export default function ChatList() {
       where("participants", "array-contains", currentUser.uid)
     );
 
-    const unsubscribe = onSnapshot(
-      q,
-      async (snapshot) => {
-        try {
-          const rooms = await Promise.all(
-            snapshot.docs.map(async (chatDoc) => {
-              const chatData = {
-                id: chatDoc.id,
-                ...chatDoc.data(),
-              };
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
+      try {
+        const rooms = await Promise.all(
+          snapshot.docs.map(async (chatDoc) => {
+            const chatData = {
+              id: chatDoc.id,
+              ...chatDoc.data(),
+            };
 
-              const otherUserId = chatData.participants?.find(
-                (uid) => uid !== currentUser.uid
+            const otherUserId = chatData.participants?.find(
+              (uid) => uid !== currentUser.uid
+            );
+
+            let otherUser = null;
+            let product = null;
+
+            if (otherUserId) {
+              const userSnap = await getDoc(doc(db, "users", otherUserId));
+              if (userSnap.exists()) {
+                otherUser = { id: userSnap.id, ...userSnap.data() };
+              }
+            }
+
+            if (chatData.productId) {
+              const productSnap = await getDoc(
+                doc(db, "products", chatData.productId)
               );
-
-              let otherUser = null;
-              let product = null;
-
-              if (otherUserId) {
-                const userSnap = await getDoc(doc(db, "users", otherUserId));
-
-                if (userSnap.exists()) {
-                  otherUser = {
-                    id: userSnap.id,
-                    ...userSnap.data(),
-                  };
-                }
+              if (productSnap.exists()) {
+                product = { id: productSnap.id, ...productSnap.data() };
               }
+            }
 
-              if (chatData.productId) {
-                const productSnap = await getDoc(
-                  doc(db, "products", chatData.productId)
-                );
+            return {
+              ...chatData,
+              otherUserId,
+              otherUser,
+              product,
+              unread: Number(chatData.unreadCount?.[currentUser.uid] || 0),
+            };
+          })
+        );
 
-                if (productSnap.exists()) {
-                  product = {
-                    id: productSnap.id,
-                    ...productSnap.data(),
-                  };
-                }
-              }
+        const sortedRooms = rooms.sort((a, b) => {
+          if (b.unread !== a.unread) return b.unread - a.unread;
 
-              return {
-                ...chatData,
-                otherUserId,
-                otherUser,
-                product,
-              };
-            })
-          );
+          const aTime = a.updatedAt?.toMillis?.() || 0;
+          const bTime = b.updatedAt?.toMillis?.() || 0;
+          return bTime - aTime;
+        });
 
-          const sortedRooms = rooms.sort((a, b) => {
-            const aTime = a.updatedAt?.toMillis?.() || 0;
-            const bTime = b.updatedAt?.toMillis?.() || 0;
-            return bTime - aTime;
-          });
-
-          setChatRooms(sortedRooms);
-          setLoading(false);
-        } catch (error) {
-          console.error("채팅 목록 불러오기 실패:", error);
-          setLoading(false);
-        }
-      },
-      (error) => {
-        console.error("채팅 목록 실시간 감지 실패:", error);
+        setChatRooms(sortedRooms);
+        setLoading(false);
+      } catch (error) {
+        console.error("채팅 목록 불러오기 실패:", error);
         setLoading(false);
       }
-    );
+    });
 
     return () => unsubscribe();
   }, [currentUser]);
 
-  const formatDate = (timestamp) => {
+  function formatDate(timestamp) {
     if (!timestamp?.toDate) return "";
 
     const date = timestamp.toDate();
@@ -135,9 +123,9 @@ export default function ChatList() {
       month: "short",
       day: "numeric",
     });
-  };
+  }
 
-  const goChat = (room) => {
+  function goChat(room) {
     navigate(`/chat/${room.productId}/${room.otherUserId}`, {
       state: {
         productId: room.productId,
@@ -146,7 +134,7 @@ export default function ChatList() {
         otherUser: room.otherUser,
       },
     });
-  };
+  }
 
   if (loading) {
     return <div style={styles.center}>채팅 목록 불러오는 중...</div>;
@@ -168,22 +156,38 @@ export default function ChatList() {
           {chatRooms.map((room) => (
             <button
               key={room.id}
-              style={styles.card}
+              style={{
+                ...styles.card,
+                backgroundColor: room.unread > 0 ? "#fff8f7" : "#fff",
+              }}
               onClick={() => goChat(room)}
             >
-              {room.product?.imageUrl || room.product?.image ? (
-                <img
-                  src={room.product.imageUrl || room.product.image}
-                  alt={room.product?.title || "상품 이미지"}
-                  style={styles.image}
-                />
-              ) : (
-                <div style={styles.noImage}>사진 없음</div>
-              )}
+              <div style={styles.imageWrap}>
+                {room.product?.imageUrl || room.product?.image ? (
+                  <img
+                    src={room.product.imageUrl || room.product.image}
+                    alt={room.product?.title || "상품 이미지"}
+                    style={styles.image}
+                  />
+                ) : (
+                  <div style={styles.noImage}>사진 없음</div>
+                )}
+
+                {room.unread > 0 && (
+                  <span style={styles.badge}>
+                    {room.unread > 999 ? "999+" : room.unread}
+                  </span>
+                )}
+              </div>
 
               <div style={styles.info}>
                 <div style={styles.topLine}>
-                  <span style={styles.name}>
+                  <span
+                    style={{
+                      ...styles.name,
+                      fontWeight: room.unread > 0 ? 900 : 700,
+                    }}
+                  >
                     {room.otherUser?.nickname ||
                       room.otherUser?.displayName ||
                       room.otherUser?.name ||
@@ -198,7 +202,13 @@ export default function ChatList() {
                   {room.product?.title || "거래 상품"}
                 </div>
 
-                <div style={styles.lastMessage}>
+                <div
+                  style={{
+                    ...styles.lastMessage,
+                    fontWeight: room.unread > 0 ? 800 : 400,
+                    color: room.unread > 0 ? "#222" : "#444",
+                  }}
+                >
                   {room.lastMessage || "메시지가 없습니다."}
                 </div>
               </div>
@@ -260,16 +270,20 @@ const styles = {
     padding: "14px 16px",
     border: "none",
     borderBottom: "1px solid #eee",
-    backgroundColor: "#fff",
     cursor: "pointer",
     textAlign: "left",
+  },
+  imageWrap: {
+    position: "relative",
+    width: "58px",
+    height: "58px",
+    flexShrink: 0,
   },
   image: {
     width: "58px",
     height: "58px",
     borderRadius: "12px",
     objectFit: "cover",
-    flexShrink: 0,
   },
   noImage: {
     width: "58px",
@@ -281,7 +295,23 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    flexShrink: 0,
+  },
+  badge: {
+    position: "absolute",
+    top: "-6px",
+    right: "-6px",
+    minWidth: "20px",
+    height: "20px",
+    padding: "0 6px",
+    borderRadius: "999px",
+    backgroundColor: "#ff3b30",
+    color: "#fff",
+    fontSize: "11px",
+    fontWeight: 900,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 2px 6px rgba(255, 59, 48, 0.35)",
   },
   info: {
     flex: 1,
@@ -295,7 +325,6 @@ const styles = {
   },
   name: {
     fontSize: "15px",
-    fontWeight: "700",
     color: "#222",
   },
   time: {
@@ -313,7 +342,6 @@ const styles = {
   },
   lastMessage: {
     fontSize: "14px",
-    color: "#444",
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",

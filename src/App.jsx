@@ -16,6 +16,7 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
+  where,
 } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
@@ -115,19 +116,30 @@ function App() {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (!user) {
-      setUnreadChatCount(0);
-      return;
-    }
+useEffect(() => {
+  if (!user) {
+    setUnreadChatCount(0);
+    return;
+  }
 
-    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
-      const data = snapshot.data();
-      setUnreadChatCount(Number(data?.unreadChatCount || 0));
+  const chatsQuery = query(
+    collection(db, "chats"),
+    where("participants", "array-contains", user.uid)
+  );
+
+  const unsubscribe = onSnapshot(chatsQuery, (snapshot) => {
+    let total = 0;
+
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      total += Number(data.unreadCount?.[user.uid] || 0);
     });
 
-    return () => unsubscribe();
-  }, [user]);
+    setUnreadChatCount(total);
+  });
+
+  return () => unsubscribe();
+}, [user]);
 
   useEffect(() => {
     const productsQuery = query(

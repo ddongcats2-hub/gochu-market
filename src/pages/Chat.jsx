@@ -155,15 +155,6 @@ export default function Chat() {
           { merge: true }
         );
 
-await setDoc(
-  doc(db, "users", currentUser.uid),
-  {
-    uid: currentUser.uid,
-    unreadChatCount: 0,
-    updatedAt: serverTimestamp(),
-  },
-  { merge: true }
-);
         setLoading(false);
       } catch (error) {
         console.error("채팅방 생성 실패:", error);
@@ -191,9 +182,13 @@ await setDoc(
       setMessages(list);
 
       try {
-        await updateDoc(doc(db, "users", currentUser.uid), {
-          unreadChatCount: 0,
-        });
+        await setDoc(
+  doc(db, "chats", chatId),
+  {
+    [`unreadCount.${currentUser.uid}`]: 0,
+  },
+  { merge: true }
+);
 
         snapshot.docs.forEach(async (docSnap) => {
           const data = docSnap.data();
@@ -251,15 +246,13 @@ await setDoc(
 try {
   console.log("배지 올리기 시도:", otherUserId);
 
-  await setDoc(
-    doc(db, "users", otherUserId),
-    {
-      uid: otherUserId,
-      unreadChatCount: increment(1),
-      updatedAt: serverTimestamp(),
-    },
-    { merge: true }
-  );
+await setDoc(
+  doc(db, "chats", chatId),
+  {
+    [`unreadCount.${otherUserId}`]: increment(1),
+  },
+  { merge: true }
+);
 
   console.log("배지 올리기 성공");
 } catch (error) {
