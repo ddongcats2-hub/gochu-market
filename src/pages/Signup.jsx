@@ -93,6 +93,7 @@ function Signup() {
         deals: 0,
         reviews: 0,
         createdAt: serverTimestamp(),
+        unreadChatCount: 0,
       });
 
       alert("회원가입이 완료되었습니다!");

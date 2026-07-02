@@ -16,8 +16,6 @@ import {
   serverTimestamp,
   setDoc,
   updateDoc,
-  collectionGroup,
-  where,
 } from "firebase/firestore";
 
 import { auth, db } from "./firebase";
@@ -47,6 +45,7 @@ const guestProfile = {
   deals: 0,
   reviews: 0,
   photo: "",
+  unreadChatCount: 0,
 };
 
 function makeDefaultProfile(user) {
@@ -60,6 +59,7 @@ function makeDefaultProfile(user) {
     deals: 0,
     reviews: 0,
     photo: user.photoURL || "",
+    unreadChatCount: 0,
   };
 }
 
@@ -90,10 +90,12 @@ function App() {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
+          const data = userSnap.data();
           setProfile({
             ...guestProfile,
-            ...userSnap.data(),
+            ...data,
           });
+          setUnreadChatCount(Number(data.unreadChatCount || 0));
         } else {
           const defaultProfile = makeDefaultProfile(firebaseUser);
 
@@ -103,6 +105,7 @@ function App() {
           });
 
           setProfile(defaultProfile);
+          setUnreadChatCount(0);
         }
       } catch (error) {
         console.error("프로필 불러오기 오류:", error);
@@ -111,6 +114,20 @@ function App() {
 
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setUnreadChatCount(0);
+      return;
+    }
+
+    const unsubscribe = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+      const data = snapshot.data();
+      setUnreadChatCount(Number(data?.unreadChatCount || 0));
+    });
+
+    return () => unsubscribe();
+  }, [user]);
 
   useEffect(() => {
     const productsQuery = query(
@@ -196,31 +213,6 @@ function App() {
 
     return () => unsubscribe();
   }, [user]);
-
-useEffect(() => {
-  if (!user) {
-    setUnreadChatCount(0);
-    return;
-  }
-
-  const unreadMessagesQuery = query(
-    collectionGroup(db, "messages"),
-    where("receiverId", "==", user.uid),
-    where("read", "==", false)
-  );
-
-  const unsubscribe = onSnapshot(
-    unreadMessagesQuery,
-    (snapshot) => {
-      setUnreadChatCount(snapshot.size);
-    },
-    (error) => {
-      console.error("채팅 배지 불러오기 오류:", error);
-    }
-  );
-
-  return () => unsubscribe();
-}, [user]);
 
   function requireLogin() {
     if (!user) {
@@ -619,17 +611,6 @@ useEffect(() => {
             />
           }
         />
-
-        <Route
-  path="/chat/:productId"
-  element={
-    <Chat
-      user={user}
-      products={products}
-      addNotification={addNotification}
-    />
-  }
-/>
       </Routes>
 
       {!hideBottomTab && (

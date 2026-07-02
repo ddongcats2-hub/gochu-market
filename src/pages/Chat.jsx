@@ -155,10 +155,15 @@ export default function Chat() {
           { merge: true }
         );
 
-        await updateDoc(chatRef, {
-          [`unreadCount.${currentUser.uid}`]: 0,
-        });
-
+await setDoc(
+  doc(db, "users", currentUser.uid),
+  {
+    uid: currentUser.uid,
+    unreadChatCount: 0,
+    updatedAt: serverTimestamp(),
+  },
+  { merge: true }
+);
         setLoading(false);
       } catch (error) {
         console.error("채팅방 생성 실패:", error);
@@ -186,8 +191,8 @@ export default function Chat() {
       setMessages(list);
 
       try {
-        await updateDoc(doc(db, "chats", chatId), {
-          [`unreadCount.${currentUser.uid}`]: 0,
+        await updateDoc(doc(db, "users", currentUser.uid), {
+          unreadChatCount: 0,
         });
 
         snapshot.docs.forEach(async (docSnap) => {
@@ -238,11 +243,29 @@ export default function Chat() {
           },
           lastMessage,
           lastMessageSenderId: currentUser.uid,
-          [`unreadCount.${otherUserId}`]: increment(1),
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
+
+try {
+  console.log("배지 올리기 시도:", otherUserId);
+
+  await setDoc(
+    doc(db, "users", otherUserId),
+    {
+      uid: otherUserId,
+      unreadChatCount: increment(1),
+      updatedAt: serverTimestamp(),
+    },
+    { merge: true }
+  );
+
+  console.log("배지 올리기 성공");
+} catch (error) {
+  console.error("배지 올리기 실패:", error);
+  alert(`배지 올리기 실패: ${error.code || error.message}`);
+}
 
       return true;
     } catch (error) {

@@ -809,3 +809,32 @@ body {
     transform: translateY(0);
   }
 }
+
+.profilePhoto {
+  width: 54px;
+  height: 54px;
+  min-width: 54px;
+  max-width: 54px;
+  min-height: 54px;
+  max-height: 54px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.profilePhoto img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  .profilePhoto {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    max-width: 44px;
+    min-height: 44px;
+    max-height: 44px;
+  }
+}
